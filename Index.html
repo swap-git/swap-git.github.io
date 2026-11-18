@@ -1,0 +1,295 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>swap-git Repositories</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: code-hosting profile style. Avatar + name header with tabs, a 2-column grid of popular repository cards,
+   then a filterable repository list beside a narrow sidebar (top languages, profile facts). */
+:root {
+  --canvas: #ffffff;
+  --subtle: #f6f8fa;
+  --ink: #1f2328;
+  --muted: #59636e;
+  --border: #d1d9e0;
+  --border-soft: #e6ebf1;
+  --link: #0969da;
+  --tab-active: #fd8c73;
+  --pill-ink: #59636e;
+  --btn-bg: #f6f8fa;
+  --btn-hover: #eff2f5;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0d1117;
+    --subtle: #151b23;
+    --ink: #f0f6fc;
+    --muted: #9198a1;
+    --border: #3d444d;
+    --border-soft: #262c34;
+    --link: #4493f8;
+    --tab-active: #f78166;
+    --pill-ink: #9198a1;
+    --btn-bg: #212830;
+    --btn-hover: #262c36;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0d1117;
+  --subtle: #151b23;
+  --ink: #f0f6fc;
+  --muted: #9198a1;
+  --border: #3d444d;
+  --border-soft: #262c34;
+  --link: #4493f8;
+  --tab-active: #f78166;
+  --pill-ink: #9198a1;
+  --btn-bg: #212830;
+  --btn-hover: #262c36;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--canvas); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 6px; }
+svg.icon { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: text-bottom; }
+
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 1012px; margin: 0 auto; }
+
+/* profile header band */
+.head { background: var(--subtle); border-bottom: 1px solid var(--border); }
+.head .inner { padding-block: 28px 0; display: grid; gap: 22px; }
+.who { display: flex; align-items: center; gap: 20px; }
+.avatar { width: 100px; height: 100px; border-radius: 50%; border: 1px solid var(--border); background: var(--canvas); flex: none; }
+.who h1 { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.25; }
+.who .handle { color: var(--muted); font-size: 16px; margin-top: 2px; }
+.who .links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; color: var(--muted); }
+.who .links span, .who .links a { display: inline-flex; align-items: center; gap: 6px; }
+
+.tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: -1px; }
+.tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; color: var(--ink); background: none; border: 0;
+  padding: 8px 8px 10px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+}
+.tab:hover { border-bottom-color: var(--border); }
+.tab[aria-selected="true"] { font-weight: 600; border-bottom-color: var(--tab-active); }
+.counter { background: var(--border-soft); border-radius: 2em; padding: 0 7px; font-size: 12px; font-weight: 500; line-height: 18px; font-variant-numeric: tabular-nums; }
+
+/* body */
+.main .inner { padding-block: 24px 48px; display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 32px; align-items: start; }
+@media (max-width: 760px) { .main .inner { grid-template-columns: minmax(0, 1fr); } }
+.content { display: grid; gap: 28px; min-width: 0; }
+h2 { font-size: 16px; font-weight: 400; margin: 0 0 10px; }
+h3 { font-size: 14px; font-weight: 600; margin: 0 0 10px; }
+
+.pill { border: 1px solid var(--border); color: var(--pill-ink); border-radius: 2em; padding: 0 7px; font-size: 12px; font-weight: 500; line-height: 18px; }
+.repo-link { font-weight: 600; overflow-wrap: anywhere; }
+.lang { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(127,127,127,0.25); background: var(--c, var(--muted)); flex: none; }
+.desc { color: var(--muted); margin: 0; }
+.desc.none { font-style: italic; }
+
+.popular { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 560px) { .popular { grid-template-columns: minmax(0, 1fr); } }
+.card { border: 1px solid var(--border); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--canvas); }
+.card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card-top .icon { color: var(--muted); }
+.card .desc { flex: 1; font-size: 12px; }
+.card .meta { font-size: 12px; color: var(--muted); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.filters input { flex: 1 1 220px; min-width: 0; }
+.filters input, .filters select {
+  font: inherit; color: var(--ink); background: var(--canvas);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; line-height: 20px;
+}
+.filters select { background: var(--btn-bg); cursor: pointer; }
+.summary { color: var(--muted); padding-block: 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.row { display: flex; gap: 16px; justify-content: space-between; padding-block: 22px; border-bottom: 1px solid var(--border); }
+.row-body { display: grid; gap: 8px; min-width: 0; }
+.row-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 20px; }
+.row .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row .meta span { display: inline-flex; align-items: center; gap: 4px; }
+.btn {
+  font: 500 12px var(--font-body); color: var(--ink); background: var(--btn-bg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px 12px; line-height: 20px;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; align-self: flex-start;
+}
+.btn:hover { background: var(--btn-hover); }
+.empty { padding: 32px 0; text-align: center; color: var(--muted); border-bottom: 1px solid var(--border); }
+@media (max-width: 560px) { .row { flex-direction: column; gap: 12px; } }
+
+.side { display: grid; gap: 20px; }
+.side section + section { border-top: 1px solid var(--border); padding-top: 20px; }
+.side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.side li { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.side li b { color: var(--ink); font-weight: 600; }
+
+footer { color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
+footer .inner { padding-block: 24px; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-repo" viewBox="0 0 16 16"><path d="M3 13.5V3a1.5 1.5 0 0 1 1.5-1.5H13v10H4.5A1.5 1.5 0 0 0 3 13a1.5 1.5 0 0 0 1.5 1.5H7"/><path d="M9 13v2.5l1.25-1 1.25 1V13"/></symbol>
+  <symbol id="i-book" viewBox="0 0 16 16"><path d="M1.5 3h4A2.5 2.5 0 0 1 8 5.5v8A2 2 0 0 0 6 12H1.5z"/><path d="M14.5 3h-4A2.5 2.5 0 0 0 8 5.5v8a2 2 0 0 1 2-1.5h4.5z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 16 16"><path d="M8 1.75l1.9 3.85 4.25.62-3.08 3 .73 4.23L8 11.45l-3.8 2 .73-4.23-3.08-3 4.25-.62z"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 16 16"><circle cx="4" cy="3" r="1.5"/><circle cx="12" cy="3" r="1.5"/><circle cx="8" cy="13" r="1.5"/><path d="M4 4.5v1A2 2 0 0 0 6 7.5h4a2 2 0 0 0 2-2v-1M8 7.5v4"/></symbol>
+  <symbol id="i-issue" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.25"/><circle cx="8" cy="8" r="1"/></symbol>
+  <symbol id="i-link" viewBox="0 0 16 16"><path d="M7 9a3 3 0 0 0 4.24 0l2.12-2.12a3 3 0 0 0-4.24-4.24L8.5 3.26"/><path d="M9 7a3 3 0 0 0-4.24 0L2.64 9.12a3 3 0 0 0 4.24 4.24l.62-.62"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8.5" height="8.5" rx="1.5"/><path d="M10.5 3.5V3A1.5 1.5 0 0 0 9 1.5H3A1.5 1.5 0 0 0 1.5 3v6A1.5 1.5 0 0 0 3 10.5h.5"/></symbol>
+</svg>
+
+<div class="head gutter">
+  <div class="inner">
+    <div class="who">
+      <img class="avatar" src="data:image/png;base64,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" alt="swap-git's avatar" width="100" height="100">
+      <div>
+        <h1>swap-git</h1>
+        <div class="handle">Code repositories</div>
+        <div class="links">
+          <a href="https://github.com/swap-git" target="_blank" rel="noopener noreferrer"><svg class="icon"><use href="#i-link"/></svg>github.com/swap-git</a>
+          <span><svg class="icon"><use href="#i-cal"/></svg>Joined Jun 2016</span>
+        </div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Profile sections">
+      <button class="tab" role="tab" id="tab-overview" aria-selected="true" data-view="overview"><svg class="icon"><use href="#i-book"/></svg>Overview</button>
+      <button class="tab" role="tab" id="tab-repos" aria-selected="false" data-view="repos"><svg class="icon"><use href="#i-repo"/></svg>Repositories <span class="counter" id="repo-count"></span></button>
+    </nav>
+  </div>
+</div>
+
+<div class="main gutter">
+  <div class="inner">
+    <div class="content">
+      <section id="popular-section">
+        <h2>Popular repositories</h2>
+        <ol class="popular" id="popular"></ol>
+      </section>
+
+      <section>
+        <h3>Repositories</h3>
+        <div class="filters">
+          <input type="search" id="q" placeholder="Find a repository…" aria-label="Find a repository">
+          <select id="f-lang" aria-label="Language"></select>
+          <select id="f-sort" aria-label="Sort">
+            <option value="updated">Sort: Last updated</option>
+            <option value="name">Sort: Name</option>
+            <option value="stars">Sort: Stars</option>
+          </select>
+        </div>
+        <div class="summary" id="summary"></div>
+        <ul class="list" id="list"></ul>
+      </section>
+    </div>
+
+    <aside class="side">
+      <section>
+        <h3>Top languages</h3>
+        <ul id="langs"></ul>
+      </section>
+      <section>
+        <h3>At a glance</h3>
+        <ul>
+          <li><svg class="icon"><use href="#i-repo"/></svg><b id="g-repos"></b> public repositories</li>
+          <li><svg class="icon"><use href="#i-star"/></svg><b id="g-stars"></b> stars</li>
+          <li><svg class="icon"><use href="#i-cal"/></svg>Last push <b id="g-last"></b></li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<footer class="gutter"><div class="inner">Public repositories of github.com/swap-git as of 18 Nov 2026. Private repositories are not shown.</div></footer>
+
+<script>
+const repos = [
+  { name: "Dissertation", desc: "A comprehensive system to detect objects, identify violations, and send agentic notifications",
+    lang: "Jupyter Notebook", stars: 0, forks: 0, issues: 0, updated: "2026-08-12" },
+  { name: "AINewsAggregator", desc: "", lang: "Python", stars: 0, forks: 0, issues: 0, updated: "2026-05-12" },
+  { name: "langchain-project", desc: "Project to understand the AI agents and workflows",
+    lang: "", stars: 0, forks: 0, issues: 0, updated: "2026-04-07" },
+  { name: "ML-Algos", desc: "", lang: "Jupyter Notebook", stars: 0, forks: 0, issues: 0, updated: "2025-10-28" }
+].map(r => ({ ...r, url: `https://github.com/swap-git/${r.name}` }));
+
+const langColors = { "Python": "#3572A5", "Jupyter Notebook": "#DA5B0B" };
+const icon = id => `<svg class="icon"><use href="#i-${id}"/></svg>`;
+const date = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+const langTag = r => r.lang ? `<span class="lang"><span class="dot" style="--c:${langColors[r.lang] || "var(--muted)"}"></span>${r.lang}</span>` : "";
+const descTag = r => `<p class="desc${r.desc ? "" : " none"}">${r.desc || "No description provided."}</p>`;
+const $ = id => document.getElementById(id);
+
+/* header counters and sidebar */
+$("repo-count").textContent = repos.length;
+$("g-repos").textContent = repos.length;
+$("g-stars").textContent = repos.reduce((s, r) => s + r.stars, 0);
+$("g-last").textContent = date(repos.map(r => r.updated).sort().at(-1));
+const langCounts = {};
+repos.forEach(r => { if (r.lang) langCounts[r.lang] = (langCounts[r.lang] || 0) + 1; });
+const langs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+$("langs").innerHTML = langs.map(([l, n]) =>
+  `<li><span class="dot" style="--c:${langColors[l] || "var(--muted)"}"></span><b>${l}</b> ${n} ${n === 1 ? "repo" : "repos"}</li>`).join("");
+$("f-lang").innerHTML = `<option value="">Language: All</option>` + langs.map(([l]) => `<option value="${l}">${l}</option>`).join("");
+
+/* popular cards: up to six, most recently updated first */
+$("popular").innerHTML = [...repos].sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 6).map(r => `
+  <li class="card">
+    <div class="card-top">${icon("repo")}<a class="repo-link" href="${r.url}" target="_blank" rel="noopener noreferrer">${r.name}</a><span class="pill">Public</span></div>
+    ${descTag(r)}
+    <div class="meta">${langTag(r) || "&nbsp;"}</div>
+  </li>`).join("");
+
+/* repository list with filters */
+function renderList() {
+  const q = $("q").value.trim().toLowerCase(), lang = $("f-lang").value, sort = $("f-sort").value;
+  const rows = repos
+    .filter(r => (!q || (r.name + " " + r.desc).toLowerCase().includes(q)) && (!lang || r.lang === lang))
+    .sort((a, b) => sort === "name" ? a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+                  : sort === "stars" ? b.stars - a.stars || b.updated.localeCompare(a.updated)
+                  : b.updated.localeCompare(a.updated));
+  $("summary").innerHTML = `Showing <b>${rows.length}</b> of <b>${repos.length}</b> repositories`;
+  $("list").innerHTML = rows.length ? rows.map(r => `
+    <li class="row">
+      <div class="row-body">
+        <div class="row-title"><a class="repo-link" href="${r.url}" target="_blank" rel="noopener noreferrer">${r.name}</a><span class="pill">Public</span></div>
+        ${descTag(r)}
+        <div class="meta">
+          ${langTag(r)}
+          <span title="Stars">${icon("star")}${r.stars}</span>
+          <span title="Forks">${icon("fork")}${r.forks}</span>
+          <span title="Open issues">${icon("issue")}${r.issues}</span>
+          <span>Updated on ${date(r.updated)}</span>
+        </div>
+      </div>
+      <button class="btn" type="button" id="copy-${r.name}" data-cmd="git clone ${r.url}.git" aria-label="Copy clone command for ${r.name}">${icon("copy")}<span>Copy clone</span></button>
+    </li>`).join("") : `<li class="empty">No repositories match your filters.</li>`;
+}
+["q", "f-lang", "f-sort"].forEach(id => $(id).addEventListener("input", renderList));
+renderList();
+
+$("list").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-cmd]");
+  if (!btn) return;
+  const label = btn.querySelector("span");
+  try { await navigator.clipboard.writeText(btn.dataset.cmd); label.textContent = "Copied"; }
+  catch { label.textContent = btn.dataset.cmd; }
+  setTimeout(() => { label.textContent = "Copy clone"; }, 2200);
+});
+
+/* tabs: Overview shows popular cards and the list; Repositories shows only the list */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(o => o.setAttribute("aria-selected", String(o === t)));
+  $("popular-section").hidden = t.dataset.view === "repos";
+  if (t.dataset.view === "repos") $("q").focus();
+}));
+</script>
+
+</body></html>
